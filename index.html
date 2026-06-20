@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>古代科技史料数字化——中国古代数理科技时间线（上古至明清完整版）</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "SimSun", "Microsoft YaHei", serif;
+        }
+        body {
+            background-color: #f7f2e7;
+            color: #2c2c2c;
+        }
+        header {
+            background: linear-gradient(120deg, #783f04, #b45f06);
+            color: #fff;
+            padding: 30px 10px;
+            text-align: center;
+        }
+        header h1 {
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .control-bar {
+            max-width: 1200px;
+            margin: 30px auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
+        }
+        .control-bar input, .control-bar select {
+            padding: 8px 12px;
+            border: 1px solid #783f04;
+            border-radius: 4px;
+            font-size: 15px;
+            width: 180px;
+        }
+        .control-bar button {
+            padding: 8px 18px;
+            background: #783f04;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .control-bar button:hover {
+            background: #b45f06;
+        }
+        /* 时间线主体 */
+        .timeline-wrap {
+            max-width: 1200px;
+            margin: 0 auto 60px;
+            position: relative;
+            padding: 10px;
+        }
+        .timeline-wrap::before {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: #783f04;
+            transform: translateX(-50%);
+        }
+        .timeline-item {
+            width: 50%;
+            margin: 35px 0;
+            position: relative;
+        }
+        .item-left {
+            padding-right: 40px;
+            left: 0;
+        }
+        .item-right {
+            padding-left: 40px;
+            left: 50%;
+        }
+        .timeline-item::after {
+            content: "";
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #fff;
+            border: 4px solid #783f04;
+            position: absolute;
+            top: 16px;
+            z-index: 2;
+        }
+        .item-left::after {
+            right: -9px;
+        }
+        .item-right::after {
+            left: -9px;
+        }
+        .item-card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(120, 63, 4, 0.12);
+            cursor: pointer;
+            transition: transform 0.25s ease;
+        }
+        .item-card:hover {
+            transform: translateY(-6px);
+        }
+        .item-card h3 {
+            color: #783f04;
+            margin-bottom: 6px;
+        }
+        .year-text {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        /* 弹窗样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.65);
+            z-index: 999;
+            overflow-y: auto;
+        }
+        .modal-box {
+            width: 92%;
+            max-width: 720px;
+            margin: 6% auto;
+            background: #fff;
+            padding: 32px;
+            border-radius: 10px;
+            position: relative;
+        }
+        .close-btn {
+            position: absolute;
+            right: 24px;
+            top: 20px;
+            font-size: 30px;
+            color: #666;
+            cursor: pointer;
+        }
+        .tag-label {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #f3e4cc;
+            color: #783f04;
+            border-radius: 20px;
+            font-size: 13px;
+            margin: 4px 6px 8px 0;
+        }
+        .modal-box p {
+            margin: 12px 0;
+            line-height: 1.7;
+        }
+        /* 移动端适配 */
+        @media (max-width:768px) {
+            .timeline-wrap::before {
+                left: 22px;
+            }
+            .timeline-item {
+                width: 100%;
+                padding-left: 50px;
+                padding-right: 10px;
+            }
+            .item-right {
+                left: 0;
+            }
+            .item-left::after, .item-right::after {
+                left: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>古代科技史料数字化——中国古代数理科技时间线</h1>
+        <p>上古｜夏商｜周｜春秋战国｜汉｜魏晋｜隋唐｜宋｜元｜明｜清 完整科技脉络</p>
+    </header>
+
+    <div class="control-bar">
+        <input type="text" id="searchInput" placeholder="搜索成果/人物/朝代">
+        <select id="cateSelect">
+            <option value="all">全部领域</option>
+            <option value="数学">数学</option>
+            <option value="天文">天文</option>
+            <option value="算学">算学</option>
+            <option value="物理">物理</option>
+        </select>
+        <input type="number" id="jumpYear" placeholder="年份跳转（前负后正）">
+        <button id="jumpBtn">定位年份</button>
+    </div>
+
+    <div class="timeline-wrap" id="timelineBox"></div>
+
+    <!-- 详情弹窗 -->
+    <div class="modal" id="detailModal">
+        <div class="modal-box">
+            <span class="close-btn">&times;</span>
+            <h2 id="modalTitle"></h2>
+            <p class="year-text" id="modalYear"></p>
+            <div id="tagGroup"></div>
+            <p><strong>技术原理：</strong><span id="modalPrinciple"></span></p>
+            <p><strong>历史价值：</strong><span id="modalValue"></span></p>
+            <p><strong>趣味拓展：</strong><span id="modalExtend"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // 【超级完整版】上古→明清 全朝代数理科技数据库
+        const techData = [
+            // ========== 上古时期 ==========
+            {
+                id:1,
+                name:"上古结绳记数、刻契记数",
+                year:-8000,
+                dynasty:"上古新石器时代",
+                author:"华夏先民",
+                category:"算学",
+                principle:"通过绳结数量、刻痕数量记录猎物、收成、人口数量，形成最早记数逻辑",
+                value:"华夏最早数学萌芽，标志人类进入量化计数时代",
+                extend:"并非简单记录，已具备一一对应的原始数理思维，是后世算术基础"
+            },
+            // ========== 夏商时期 ==========
+            {
+                id:2,
+                name:"夏代圭表测影定节气",
+                year:-2070,
+                dynasty:"夏代",
+                author:"夏代天文官",
+                category:"天文",
+                principle:"立竿测影，通过日影长短变化测定四季、冬至夏至，校准农时",
+                value:"中国最早天文测量技术，奠定二十四节气基础",
+                extend:"圭表测量本质是几何投影算法，是古代最早的定量天文观测方法"
+            },
+            {
+                id:3,
+                name:"商代甲骨文十进制记数系统",
+                year:-1600,
+                dynasty:"商代",
+                author:"商代卜官",
+                category:"数学",
+                principle:"建立一、十、百、千、万完整位值体系，用位置区分量级，实现大数表达",
+                value:"世界最早成熟十进位值制记数法，领先古埃及、古巴比伦记数体系",
+                extend:"现代全球通用十进制，根源来自中国商代位值制思想"
+            },
+            {
+                id:4,
+                name:"商代干支纪日体系",
+                year:-1300,
+                dynasty:"商代",
+                author:"商代先民",
+                category:"天文",
+                principle:"十天干、十二地支循环配对，形成六十甲子周期循环纪日",
+                value:"人类沿用至今持续不断的最长纪日系统，三千年连续无断档",
+                extend:"内置周期迭代算法，不是经验记录，是成熟循环数理模型"
+            },
+            // ========== 西周 ==========
+            {
+                id:5,
+                name:"商高勾股特例（勾三股四弦五）",
+                year:-1100,
+                dynasty:"西周",
+                author:"商高",
+                category:"数学",
+                principle:"发现直角三角形三边整数比例关系，用于天地测距、土方测量",
+                value:"世界最早勾股定理文字记载，早西方六百年",
+                extend:"《周髀算经》给出完整推导逻辑，属于严谨几何算法"
+            },
+            // ========== 春秋战国 ==========
+            {
+                id:6,
+                name:"算筹完整运算体系成型",
+                year:-700,
+                dynasty:"春秋战国",
+                author:"先秦数学家",
+                category:"算学",
+                principle:"纵横筹式区分数位，实现加减乘除、开方、解方程全套运算",
+                value:"构建中国两千年主流计算体系，是古代最高效手工计算工具",
+                extend:"算筹拥有标准化运算流程，相当于古代“可编程计算器”"
+            },
+            {
+                id:7,
+                name:"九九乘法口诀定型",
+                year:-600,
+                dynasty:"春秋",
+                author:"民间数学家",
+                category:"算学",
+                principle:"归纳9×9以内全部乘法关系，形成速算口诀体系",
+                value:"世界最早系统化乘法速算体系，极大提升古代运算效率",
+                extend:"汉代正式官学普及，成为古代国民数学基础教育"
+            },
+            {
+                id:8,
+                name:"墨经光学八条（小孔成像）",
+                year:-400,
+                dynasty:"战国",
+                author:"墨子及墨家学派",
+                category:"物理",
+                principle:"证明光沿直线传播，解释小孔倒立成像、镜面成像、光影变化规律",
+                value:"世界最早系统几何光学理论，领先西方近两千年",
+                extend:"墨家已具备成像定量分析思维，是中国古代物理巅峰成就"
+            },
+            {
+                id:9,
+                name:"墨家力学杠杆原理",
+                year:-380,
+                dynasty:"战国",
+                author:"墨子学派",
+                category:"物理",
+                principle:"阐述力、力矩、杠杆平衡条件，解释配重、支点受力规律",
+                value:"中国最早定量力学理论，早于阿基米德杠杆原理",
+                extend:"墨家同时研究浮力、重心、运动学，构建早期经典物理框架"
+            },
+            // ========== 汉代 ==========
+            {
+                id:10,
+                name:"《九章算术》成书定稿",
+                year:-100,
+                dynasty:"西汉",
+                author:"历代数学家汇编",
+                category:"算学",
+                principle:"分类记载方田、粟米、衰分、少广、商功、均输、盈不足、方程、勾股九类算法",
+                value:"标志中国古代完整数学体系正式成型，东亚数学教科书沿用千年",
+                extend:"首创线性方程组、负数运算、盈不足插值算法，领先世界千年"
+            },
+            {
+                id:11,
+                name:"落下闳太初历历法改革",
+                year:-104,
+                dynasty:"西汉",
+                author:"落下闳",
+                category:"天文",
+                principle:"重新测算回归年、朔望月周期，确立阴阳合历正式制度",
+                value:"确立中国后世两千年历法基本框架",
+                extend:"引入天文周期校正算法，大幅降低历法误差"
+            },
+            {
+                id:12,
+                name:"张衡浑天仪与天文观测",
+                year:130,
+                dynasty:"东汉",
+                author:"张衡",
+                category:"天文",
+                principle:"利用齿轮联动模拟天体运行，可视化还原日月星辰运转规律",
+                value:"世界最早全自动天文演示仪器，开创机械天文时代",
+                extend:"内置精密传动数理结构，是古代自动化机械巅峰"
+            },
+            // ========== 魏晋南北朝 ==========
+            {
+                id:13,
+                name:"刘徽割圆术与徽率",
+                year:263,
+                dynasty:"曹魏",
+                author:"刘徽",
+                category:"数学",
+                principle:"通过正多边形无限逼近圆形，迭代收敛求取圆周率",
+                value:"创立极限逼近思想，奠定后世微积分萌芽思维",
+                extend:"割圆术是纯粹数理迭代算法，不是经验估算"
+            },
+            {
+                id:14,
+                name:"祖冲之高精度圆周率",
+                year:480,
+                dynasty:"南北朝",
+                author:"祖冲之",
+                category:"数学",
+                principle:"继承割圆术迭代，将圆周率锁定3.1415926~3.1415927",
+                value:"千年世界最精准圆周率记录，无人超越",
+                extend:"手工算筹数万次迭代运算，展现古代顶级算力"
+            },
+            {
+                id:15,
+                name:"祖暅原理（等积原理）",
+                year:500,
+                dynasty:"南北朝",
+                author:"祖暅",
+                category:"数学",
+                principle:"幂势既同，则积不容异，解决球体体积精准计算",
+                value:"比西方卡瓦列利原理早一千一百年",
+                extend:"是立体几何核心基础定理，影响后世体积算法"
+            },
+            // ========== 隋唐 ==========
+            {
+                id:16,
+                name:"刘焯二次插值历法算法",
+                year:600,
+                dynasty:"隋代",
+                author:"刘焯",
+                category:"天文",
+                principle:"创立二次差内插法，校正日月运行不均匀误差",
+                value:"大幅提升古代历法精度，开启高阶数值计算",
+                extend:"是高等数学插值算法的古代先驱"
+            },
+            {
+                id:17,
+                name:"李淳风整理《算经十书》",
+                year:650,
+                dynasty:"唐代",
+                author:"李淳风",
+                category:"算学",
+                principle:"系统校勘、注释历代数学经典，统一古代数学教学体系",
+                value:"确立官方数学教材体系，延续千年学术传承",
+                extend:"唐代将数学纳入科举，是世界最早数学官方教育制度"
+            },
+            // ========== 宋代 ==========
+            {
+                id:18,
+                name:"沈括《梦溪笔谈》数理创新",
+                year:1080,
+                dynasty:"北宋",
+                author:"沈括",
+                category:"物理",
+                principle:"提出隙积术、会圆术，研究球面、垛积数列、声学共振",
+                value:"开创高阶等差级数与球面几何研究先河",
+                extend:"隙积术是高阶数列求和算法，接近现代级数思想"
+            },
+            {
+                id:19,
+                name:"秦九韶大衍求一术",
+                year:1247,
+                dynasty:"南宋",
+                author:"秦九韶",
+                category:"数学",
+                principle:"系统求解一次同余方程组，实现模数通用解法",
+                value:"世界最早完整同余理论，西方五百年后才建立",
+                extend:"被现代数论称为「中国剩余定理」"
+            },
+            {
+                id:20,
+                name:"杨辉三角高阶二项式系数",
+                year:1261,
+                dynasty:"南宋",
+                author:"杨辉",
+                category:"数学",
+                principle:"系统归纳二项式展开系数规律，形成递推三角矩阵",
+                value:"比欧洲帕斯卡三角早四百年",
+                extend:"自带递推迭代逻辑，是组合数学经典模型"
+            },
+            // ========== 元代 ==========
+            {
+                id:21,
+                name:"郭守敬《授时历》高精度历法",
+                year:1280,
+                dynasty:"元代",
+                author:"郭守敬",
+                category:"天文",
+                principle:"三次插值算法+球面三角，测算回归年365.2425天",
+                value:"古代最精准历法，与现代公历数值完全一致",
+                extend:"高阶数值算法领先同时代欧洲数百年"
+            },
+            {
+                id:22,
+                name:"朱世杰四元高次方程组",
+                year:1303,
+                dynasty:"元代",
+                author:"朱世杰",
+                category:"数学",
+                principle:"创立四元术，同时求解天、地、人、物四元高次方程",
+                value:"古代代数学巅峰，世界同期最高水平",
+                extend:"实现多元高次方程系统化消元算法"
+            },
+            // ========== 明代 ==========
+            {
+                id:23,
+                name:"明代珠算体系成熟",
+                year:1500,
+                dynasty:"明代",
+                author:"明代数学家",
+                category:"算学",
+                principle:"完善算盘档位逻辑、归除口诀，实现快速商业大数运算",
+                value:"古代民用计算工具终极形态，普及全民数学",
+                extend:"珠算本质是并行位值计算模型，效率极高"
+            },
+            {
+                id:24,
+                name:"程大位《算法统宗》",
+                year:1592,
+                dynasty:"明代",
+                author:"程大位",
+                category:"算学",
+                principle:"系统整理珠算口诀、商用算术、面积体积实用算法",
+                value:"明清五百年民间数学通用教科书",
+                extend:"将高深古算平民化，极大普及数理知识"
+            },
+            // ========== 清代 ==========
+            {
+                id:25,
+                name:"梅文鼎中西数学融合研究",
+                year:1680,
+                dynasty:"清代",
+                author:"梅文鼎",
+                category:"数学",
+                principle:"贯通中国传统代数几何与西方传入几何体系，对比论证融合",
+                value:"清代数学复兴第一人，开启中西数理结合研究",
+                extend:"证明大量西方几何定理可由中国古算推导得出"
+            },
+            {
+                id:26,
+                name:"王贞仪女性数理科研突破",
+                year:1780,
+                dynasty:"清代",
+                author:"王贞仪",
+                category:"天文",
+                principle:"自主研究日月食原理、岁差、行星运行，校正民间历法误区",
+                value:"清代杰出女性数理科学家，打破古代性别科研局限",
+                extend:"著述大量通俗数理科普，在封建时代极为难得"
+            }
+        ];
+
+        // 渲染时间线
+        function renderData(list){
+            const box = document.getElementById("timelineBox");
+            box.innerHTML = "";
+            const sortList = [...list].sort((a,b)=>a.year - b.year);
+            sortList.forEach((item,idx)=>{
+                const side = idx%2===0 ? "item-left" : "item-right";
+                const div = document.createElement("div");
+                div.className = `timeline-item ${side}`;
+                div.innerHTML = `
+                    <div class="item-card" data-id="${item.id}">
+                        <h3>${item.name}</h3>
+                        <div class="year-text">${item.dynasty} · ${item.year>0 ? item.year+"年" : "公元前"+Math.abs(item.year)+"年"}</div>
+                        <div>领域：${item.category}｜研究者：${item.author}</div>
+                    </div>
+                `;
+                box.appendChild(div);
+            })
+            document.querySelectorAll(".item-card").forEach(card=>{
+                card.onclick = ()=> openModal(Number(card.dataset.id));
+            })
+        }
+
+        // 弹窗打开
+        function openModal(id){
+            const d = techData.find(x=>x.id===id);
+            document.getElementById("modalTitle").innerText = d.name;
+            document.getElementById("modalYear").innerText = `${d.dynasty} · ${d.year>0 ? d.year+"年" : "公元前"+Math.abs(d.year)+"年"}`;
+            document.getElementById("tagGroup").innerHTML = `
+                <span class="tag-label">${d.category}</span>
+                <span class="tag-label">${d.author}</span>
+            `;
+            document.getElementById("modalPrinciple").innerText = d.principle;
+            document.getElementById("modalValue").innerText = d.value;
+            document.getElementById("modalExtend").innerText = d.extend;
+            document.getElementById("detailModal").style.display = "block";
+        }
+
+        // 关闭弹窗
+        document.querySelector(".close-btn").onclick = ()=>{
+            document.getElementById("detailModal").style.display = "none";
+        }
+        window.onclick = e=>{
+            if(e.target === document.getElementById("detailModal")){
+                document.getElementById("detailModal").style.display = "none";
+            }
+        }
+
+        // 搜索
+        document.getElementById("searchInput").addEventListener("input",e=>{
+            let k = e.target.value.toLowerCase();
+            let res = techData.filter(d=>
+                d.name.includes(k)||d.author.includes(k)||d.dynasty.includes(k)||String(d.year).includes(k)
+            );
+            renderData(res);
+        })
+
+        // 分类筛选
+        document.getElementById("cateSelect").onchange = e=>{
+            let v = e.target.value;
+            renderData(v==="all"?techData:techData.filter(d=>d.category===v));
+        }
+
+        // 年份跳转
+        document.getElementById("jumpBtn").onclick = ()=>{
+            let y = Number(document.getElementById("jumpYear").value);
+            if(isNaN(y)){alert("请输入有效年份！");return;}
+            let tar = techData.find(d=>d.year===y);
+            if(!tar){alert("暂无该年份成果！");return;}
+            let dom = document.querySelector(`.item-card[data-id="${tar.id}"]`);
+            dom.scrollIntoView({behavior:"smooth",block:"center"});
+            dom.style.background="#f3e4cc";
+            setTimeout(()=>dom.style.background="#fff",2000);
+        }
+
+        // 初始化
+        renderData(techData);
+    </script>
+</body>
+</html>
+    
